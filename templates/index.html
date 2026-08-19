@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPR System</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Registration Form -->
+        <div class="form-box">
+            <h2>Create Account</h2>
+
+            <input type="text" id="username" placeholder="Enter Username">
+
+            <input type="email" id="registerEmail" placeholder="Enter Email">
+
+            <input type="password" id="registerPassword" placeholder="Enter Password">
+
+            <button onclick="registerUser()">Register</button>
+
+            <p id="registerMessage"></p>
+        </div>
+
+
+        <!-- Login Form -->
+        <div class="form-box">
+            <h2>Login</h2>
+
+            <input type="email" id="loginEmail" placeholder="Enter Email">
+
+            <input type="password" id="loginPassword" placeholder="Enter Password">
+
+            <button onclick="loginUser()">Login</button>
+
+            <p id="loginMessage"></p>
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // Registration
+        function registerUser() {
+
+            fetch("/register", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    username: document.getElementById("username").value,
+                    email: document.getElementById("registerEmail").value,
+                    password: document.getElementById("registerPassword").value
+                })
+            })
+
+            .then(response => response.json())
+
+            .then(data => {
+                document.getElementById("registerMessage").innerText =
+                    data.message;
+            });
+        }
+
+
+        // Login
+        function loginUser() {
+
+            fetch("/login", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    email: document.getElementById("loginEmail").value,
+                    password: document.getElementById("loginPassword").value
+                })
+            })
+
+            .then(response => response.json())
+
+            .then(data => {
+                document.getElementById("loginMessage").innerText =
+                    data.message;
+            });
+        }
+
+    </script>
+
+</body>
+</html>
