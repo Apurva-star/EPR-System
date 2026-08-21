@@ -36,3 +36,15 @@ class SKU(db.Model):
             "cat_iii_mlp": self.cat_iii_mlp,
             "cat_iv_bio": self.cat_iv_bio,
         }
+
+class Credit(db.Model):
+    __tablename__ = "credits"
+    id = db.Column(db.Integer, primary_key=True)
+    pwp_name = db.Column(db.String(100), nullable=False)
+    pwp_cpcb_reg_no = db.Column(db.String(50), nullable=False)
+    category = db.Column(db.String(50), nullable=False) # e.g., "Category II"
+    tonnage_mt = db.Column(db.Float, nullable=False)
+    purchase_date = db.Column(db.String(20))
+    purchase_cost = db.Column(db.Float)
+    cpcb_ref_no = db.Column(db.String(100), unique=True)
+    gst_invoice_no = db.Column(db.String(50))

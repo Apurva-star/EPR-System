@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import SKU
+from app.models import SKU,Credit
 
 tasks_bp = Blueprint("tasks", __name__)
 
@@ -149,3 +149,54 @@ def delete_sku(sku_code):
     return jsonify({
         "message": "SKU deleted successfully"
     }), 200
+
+# to fill the form take info from user
+@tasks_bp.route("/api/credits", methods=["POST"])
+def add_credit():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "JSON data is required"
+        }), 400
+
+    required_fields = [
+        "pwp_name",
+        "pwp_cpcb_reg_no",
+        "category",
+        "tonnage_mt",
+        "purchase_date",
+        "purchase_cost",
+        "cpcb_ref_no",
+        "gst_invoice_no"
+    ]
+
+    missing_fields = [
+        field for field in required_fields
+        if field not in data
+    ]
+
+    if missing_fields:
+        return jsonify({
+            "error": "Missing fields",
+            "fields": missing_fields
+        }), 400
+
+    new_credit = Credit(
+        pwp_name=data["pwp_name"],
+        pwp_cpcb_reg_no=data["pwp_cpcb_reg_no"],
+        category=data["category"],
+        tonnage_mt=float(data["tonnage_mt"]),
+        purchase_date=data["purchase_date"],
+        purchase_cost=float(data["purchase_cost"]),
+        cpcb_ref_no=data["cpcb_ref_no"],
+        gst_invoice_no=data["gst_invoice_no"]
+    )
+
+    db.session.add(new_credit)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Credit logged successfully!",
+        "credit_id": new_credit.id
+    }), 201
