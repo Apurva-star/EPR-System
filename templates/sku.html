@@ -1,0 +1,741 @@
+{% extends "base.html" %}
+
+{% block title %}SKU Management - EPR System{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold">SKU Management</h2>
+            <p class="text-muted mb-0">
+                Manage your EPR product SKUs
+            </p>
+        </div>
+
+        <button
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#skuModal"
+            onclick="openAddSKU()">
+
+            <i class="bi bi-plus-circle"></i>
+            Add SKU
+
+        </button>
+
+    </div>
+
+
+    <!-- Message -->
+    <div id="message" class="alert d-none"></div>
+
+
+    <!-- SKU Table -->
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-box-seam"></i>
+                SKU List
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>SKU Code</th>
+                            <th>Product Name</th>
+                            <th>Category I</th>
+                            <th>Category II</th>
+                            <th>Category III</th>
+                            <th>Category IV</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="skuTableBody">
+
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                Loading SKUs...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- SKU MODAL -->
+<!-- ========================= -->
+
+<div
+    class="modal fade"
+    id="skuModal"
+    tabindex="-1"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title" id="modalTitle">
+                    Add SKU
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <form id="skuForm">
+
+                    <!-- SKU Code -->
+                    <div class="mb-3">
+
+                        <label
+                            for="sku_code"
+                            class="form-label fw-semibold">
+
+                            SKU Code
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="sku_code"
+                            placeholder="Example: SKU-001"
+                            required>
+
+                        <small class="text-muted">
+                            SKU Code cannot be changed while editing.
+                        </small>
+
+                    </div>
+
+
+                    <!-- Product Name -->
+                    <div class="mb-3">
+
+                        <label
+                            for="product_name"
+                            class="form-label fw-semibold">
+
+                            Product Name
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="product_name"
+                            placeholder="Enter product name"
+                            required>
+
+                    </div>
+
+
+                    <!-- Categories -->
+                    <div class="row g-3">
+
+                        <!-- Category I -->
+                        <div class="col-md-6">
+
+                            <label
+                                for="cat_i_rigid"
+                                class="form-label fw-semibold">
+
+                                Category I - Rigid
+
+                            </label>
+
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="cat_i_rigid"
+                                value="0"
+                                min="0"
+                                step="0.01">
+
+                        </div>
+
+
+                        <!-- Category II -->
+                        <div class="col-md-6">
+
+                            <label
+                                for="cat_ii_flexible"
+                                class="form-label fw-semibold">
+
+                                Category II - Flexible
+
+                            </label>
+
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="cat_ii_flexible"
+                                value="0"
+                                min="0"
+                                step="0.01">
+
+                        </div>
+
+
+                        <!-- Category III -->
+                        <div class="col-md-6">
+
+                            <label
+                                for="cat_iii_mlp"
+                                class="form-label fw-semibold">
+
+                                Category III - MLP
+
+                            </label>
+
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="cat_iii_mlp"
+                                value="0"
+                                min="0"
+                                step="0.01">
+
+                        </div>
+
+
+                        <!-- Category IV -->
+                        <div class="col-md-6">
+
+                            <label
+                                for="cat_iv_bio"
+                                class="form-label fw-semibold">
+
+                                Category IV - Bio
+
+                            </label>
+
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="cat_iv_bio"
+                                value="0"
+                                min="0"
+                                step="0.01">
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancel
+
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    onclick="saveSKU()">
+
+                    <i class="bi bi-save"></i>
+                    Save SKU
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let editMode = false;
+let editingSKU = null;
+
+
+/* =========================
+   LOAD SKUs
+========================= */
+
+async function loadSKUs() {
+
+    const tableBody =
+        document.getElementById("skuTableBody");
+
+    try {
+
+        const response =
+            await fetch("/api/skus");
+
+        const skus =
+            await response.json();
+
+        tableBody.innerHTML = "";
+
+        if (skus.length === 0) {
+
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7"
+                        class="text-center text-muted">
+
+                        No SKU records found.
+
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        skus.forEach(sku => {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${sku.sku_code}
+                    </strong>
+                </td>
+
+                <td>
+                    ${sku.product_name}
+                </td>
+
+                <td>
+                    ${sku.cat_i_rigid}
+                </td>
+
+                <td>
+                    ${sku.cat_ii_flexible}
+                </td>
+
+                <td>
+                    ${sku.cat_iii_mlp}
+                </td>
+
+                <td>
+                    ${sku.cat_iv_bio}
+                </td>
+
+                <td>
+
+                    <button
+                        class="btn btn-sm btn-outline-primary me-1"
+                        onclick='editSKU(${JSON.stringify(sku)})'>
+
+                        <i class="bi bi-pencil"></i>
+
+                    </button>
+
+
+                    <button
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="deleteSKU('${sku.sku_code}')">
+
+                        <i class="bi bi-trash"></i>
+
+                    </button>
+
+                </td>
+
+            `;
+
+            tableBody.appendChild(row);
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        tableBody.innerHTML = `
+
+            <tr>
+
+                <td colspan="7"
+                    class="text-center text-danger">
+
+                    Unable to load SKU data.
+
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+}
+
+
+/* =========================
+   OPEN ADD SKU
+========================= */
+
+function openAddSKU() {
+
+    editMode = false;
+    editingSKU = null;
+
+    document.getElementById("modalTitle")
+        .innerText = "Add SKU";
+
+    document.getElementById("skuForm")
+        .reset();
+
+    document.getElementById("sku_code")
+        .disabled = false;
+
+    document.getElementById("cat_i_rigid")
+        .value = 0;
+
+    document.getElementById("cat_ii_flexible")
+        .value = 0;
+
+    document.getElementById("cat_iii_mlp")
+        .value = 0;
+
+    document.getElementById("cat_iv_bio")
+        .value = 0;
+
+}
+
+
+/* =========================
+   EDIT SKU
+========================= */
+
+function editSKU(sku) {
+
+    editMode = true;
+    editingSKU = sku.sku_code;
+
+    document.getElementById("modalTitle")
+        .innerText = "Edit SKU";
+
+    document.getElementById("sku_code")
+        .value = sku.sku_code;
+
+    document.getElementById("sku_code")
+        .disabled = true;
+
+    document.getElementById("product_name")
+        .value = sku.product_name;
+
+    document.getElementById("cat_i_rigid")
+        .value = sku.cat_i_rigid;
+
+    document.getElementById("cat_ii_flexible")
+        .value = sku.cat_ii_flexible;
+
+    document.getElementById("cat_iii_mlp")
+        .value = sku.cat_iii_mlp;
+
+    document.getElementById("cat_iv_bio")
+        .value = sku.cat_iv_bio;
+
+
+    const modal =
+        new bootstrap.Modal(
+            document.getElementById("skuModal")
+        );
+
+    modal.show();
+
+}
+
+
+/* =========================
+   SAVE SKU
+========================= */
+
+async function saveSKU() {
+
+    const skuCode =
+        document.getElementById("sku_code").value.trim();
+
+    const productName =
+        document.getElementById("product_name").value.trim();
+
+    if (!skuCode || !productName) {
+
+        showMessage(
+            "SKU Code and Product Name are required.",
+            "danger"
+        );
+
+        return;
+    }
+
+
+    const data = {
+
+        sku_code: skuCode,
+
+        product_name: productName,
+
+        cat_i_rigid:
+            parseFloat(
+                document.getElementById("cat_i_rigid").value
+            ) || 0,
+
+        cat_ii_flexible:
+            parseFloat(
+                document.getElementById("cat_ii_flexible").value
+            ) || 0,
+
+        cat_iii_mlp:
+            parseFloat(
+                document.getElementById("cat_iii_mlp").value
+            ) || 0,
+
+        cat_iv_bio:
+            parseFloat(
+                document.getElementById("cat_iv_bio").value
+            ) || 0
+
+    };
+
+
+    try {
+
+        let response;
+
+        if (editMode) {
+
+            response = await fetch(
+                `/api/skus/${encodeURIComponent(editingSKU)}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(data)
+                }
+            );
+
+        }
+
+        else {
+
+            response = await fetch(
+                "/api/skus",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(data)
+                }
+            );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            showMessage(
+                result.error || "Unable to save SKU.",
+                "danger"
+            );
+
+            return;
+        }
+
+
+        showMessage(
+            editMode
+                ? "SKU updated successfully."
+                : "SKU created successfully.",
+            "success"
+        );
+
+
+        const modalElement =
+            document.getElementById("skuModal");
+
+        const modal =
+            bootstrap.Modal.getInstance(modalElement);
+
+        modal.hide();
+
+
+        loadSKUs();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            "Server connection failed.",
+            "danger"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   DELETE SKU
+========================= */
+
+async function deleteSKU(skuCode) {
+
+    if (!confirm(
+        `Are you sure you want to delete SKU "${skuCode}"?`
+    )) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/skus/${encodeURIComponent(skuCode)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            showMessage(
+                result.error || "Unable to delete SKU.",
+                "danger"
+            );
+
+            return;
+        }
+
+
+        showMessage(
+            "SKU deleted successfully.",
+            "success"
+        );
+
+
+        loadSKUs();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            "Server connection failed.",
+            "danger"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   MESSAGE
+========================= */
+
+function showMessage(text, type) {
+
+    const message =
+        document.getElementById("message");
+
+    message.className =
+        `alert alert-${type}`;
+
+    message.innerText = text;
+
+    message.classList.remove("d-none");
+
+
+    setTimeout(() => {
+
+        message.classList.add("d-none");
+
+    }, 4000);
+
+}
+
+
+/* =========================
+   PAGE LOAD
+========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    loadSKUs
+);
+
+</script>
+
+{% endblock %}

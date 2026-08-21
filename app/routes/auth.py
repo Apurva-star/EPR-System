@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify,render_template
 from app import db
 from app.models import User
 
@@ -111,3 +111,17 @@ def logout():
         "success": True,
         "message": "Logout successful"
     }), 200
+
+
+@auth_bp.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+@auth_bp.route("/credit_entry")
+def credit_entry():
+    return render_template("credit_entry.html")
+
+
+@auth_bp.route("/sku")
+def sku():
+    return render_template("sku.html")

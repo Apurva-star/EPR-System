@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Add EPR Credit{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Add EPR Credit</h2>
+            <p class="text-muted mb-0">
+                Enter the EPR credit purchase details
+            </p>
+        </div>
+
+        <a href="/dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+
+    <!-- Credit Form -->
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-credit-card"></i>
+                Credit Information
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <!-- Success/Error Message -->
+            <div id="message" class="alert d-none"></div>
+
+
+            <form id="creditForm">
+
+                <div class="row g-4">
+
+                    <!-- PWP Name -->
+                    <div class="col-md-6">
+                        <label for="pwp_name" class="form-label fw-semibold">
+                            PWP Name
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="pwp_name"
+                            name="pwp_name"
+                            placeholder="Enter PWP name"
+                            required
+                        >
+                    </div>
+
+
+                    <!-- PWP CPCB Registration Number -->
+                    <div class="col-md-6">
+                        <label for="pwp_cpcb_reg_no" class="form-label fw-semibold">
+                            PWP CPCB Registration No.
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="pwp_cpcb_reg_no"
+                            name="pwp_cpcb_reg_no"
+                            placeholder="Enter CPCB registration number"
+                            required
+                        >
+                    </div>
+
+
+                    <!-- Category -->
+                    <div class="col-md-6">
+                        <label for="category" class="form-label fw-semibold">
+                            EPR Category
+                        </label>
+
+                        <select
+                            class="form-select"
+                            id="category"
+                            name="category"
+                            required
+                        >
+                            <option value="">Select Category</option>
+                            <option value="Category I">Category I - Rigid</option>
+                            <option value="Category II">Category II - Flexible</option>
+                            <option value="Category III">Category III - MLP</option>
+                            <option value="Category IV">Category IV - Bio</option>
+                        </select>
+                    </div>
+
+
+                    <!-- Tonnage -->
+                    <div class="col-md-6">
+                        <label for="tonnage_mt" class="form-label fw-semibold">
+                            Tonnage (MT)
+                        </label>
+
+                        <div class="input-group">
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="tonnage_mt"
+                                name="tonnage_mt"
+                                placeholder="Enter tonnage"
+                                min="0"
+                                step="0.01"
+                                required
+                            >
+
+                            <span class="input-group-text">
+                                MT
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <!-- Purchase Date -->
+                    <div class="col-md-6">
+                        <label for="purchase_date" class="form-label fw-semibold">
+                            Purchase Date
+                        </label>
+
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="purchase_date"
+                            name="purchase_date"
+                            required
+                        >
+                    </div>
+
+
+                    <!-- Purchase Cost -->
+                    <div class="col-md-6">
+                        <label for="purchase_cost" class="form-label fw-semibold">
+                            Purchase Cost
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="purchase_cost"
+                                name="purchase_cost"
+                                placeholder="Enter purchase cost"
+                                min="0"
+                                step="0.01"
+                                required
+                            >
+                        </div>
+                    </div>
+
+
+                    <!-- CPCB Reference Number -->
+                    <div class="col-md-6">
+                        <label for="cpcb_ref_no" class="form-label fw-semibold">
+                            CPCB Reference No.
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="cpcb_ref_no"
+                            name="cpcb_ref_no"
+                            placeholder="Enter CPCB reference number"
+                            required
+                        >
+                    </div>
+
+
+                    <!-- GST Invoice Number -->
+                    <div class="col-md-6">
+                        <label for="gst_invoice_no" class="form-label fw-semibold">
+                            GST Invoice No.
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="gst_invoice_no"
+                            name="gst_invoice_no"
+                            placeholder="Enter GST invoice number"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+
+                <!-- Buttons -->
+                <div class="mt-4 pt-3 border-top">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary px-4"
+                        id="saveBtn"
+                    >
+                        <i class="bi bi-save"></i>
+                        Save Credit
+                    </button>
+
+                    <button
+                        type="reset"
+                        class="btn btn-outline-secondary px-4 ms-2"
+                    >
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        Reset
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- JavaScript -->
+<script>
+
+document.getElementById("creditForm").addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const message = document.getElementById("message");
+    const saveBtn = document.getElementById("saveBtn");
+
+    const data = {
+        pwp_name: document.getElementById("pwp_name").value,
+        pwp_cpcb_reg_no: document.getElementById("pwp_cpcb_reg_no").value,
+        category: document.getElementById("category").value,
+        tonnage_mt: document.getElementById("tonnage_mt").value,
+        purchase_date: document.getElementById("purchase_date").value,
+        purchase_cost: document.getElementById("purchase_cost").value,
+        cpcb_ref_no: document.getElementById("cpcb_ref_no").value,
+        gst_invoice_no: document.getElementById("gst_invoice_no").value
+    };
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+    try {
+
+        const response = await fetch("/api/credits", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        message.classList.remove("d-none");
+
+        if (response.ok) {
+
+            message.className = "alert alert-success";
+            message.innerHTML =
+                "✅ Credit logged successfully! Credit ID: " +
+                result.credit_id;
+
+            document.getElementById("creditForm").reset();
+
+        } else {
+
+            message.className = "alert alert-danger";
+
+            if (result.fields) {
+                message.innerHTML =
+                    "❌ Missing fields: " +
+                    result.fields.join(", ");
+            } else {
+                message.innerHTML =
+                    "❌ " + (result.error || "Something went wrong.");
+            }
+        }
+
+    } catch (error) {
+
+        message.classList.remove("d-none");
+        message.className = "alert alert-danger";
+
+        message.innerHTML =
+            "❌ Unable to connect to the server.";
+
+        console.error(error);
+
+    }
+
+    saveBtn.disabled = false;
+    saveBtn.innerHTML =
+        '<i class="bi bi-save"></i> Save Credit';
+
+});
+
+</script>
+
+{% endblock %}
