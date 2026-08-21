@@ -21,10 +21,12 @@ def create_app():
     # Import routes
     from app.routes.auth import auth_bp
     from app.routes.tasks import tasks_bp
+    from app.routes.sales import sales_bp
 
     # Register routes
     app.register_blueprint(auth_bp)
     app.register_blueprint(tasks_bp)
+    app.register_blueprint(sales_bp)
 
     # Create database tables
     with app.app_context():

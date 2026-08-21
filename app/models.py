@@ -36,7 +36,7 @@ class SKU(db.Model):
             "cat_iii_mlp": self.cat_iii_mlp,
             "cat_iv_bio": self.cat_iv_bio,
         }
-
+# sale cvs file data 
 class Credit(db.Model):
     __tablename__ = "credits"
     id = db.Column(db.Integer, primary_key=True)
@@ -48,3 +48,74 @@ class Credit(db.Model):
     purchase_cost = db.Column(db.Float)
     cpcb_ref_no = db.Column(db.String(100), unique=True)
     gst_invoice_no = db.Column(db.String(50))
+
+
+class SalesLog(db.Model):
+    __tablename__ = "sales_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    financial_year = db.Column(
+        db.String(20),
+        nullable=False
+    )
+
+    reporting_month = db.Column(
+        db.String(20),
+        nullable=False
+    )
+
+    sku_code = db.Column(
+        db.String(50),
+        db.ForeignKey("skus.sku_code"),
+        nullable=False
+    )
+
+    units_sold = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    category_i_mt = db.Column(
+        db.Float,
+        nullable=False,
+        default=0
+    )
+
+    category_ii_mt = db.Column(
+        db.Float,
+        nullable=False,
+        default=0
+    )
+
+    category_iii_mt = db.Column(
+        db.Float,
+        nullable=False,
+        default=0
+    )
+
+    category_iv_mt = db.Column(
+        db.Float,
+        nullable=False,
+        default=0
+    )
+
+    calculated_plastic_mt = db.Column(
+        db.Float,
+        nullable=False,
+        default=0
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "financial_year": self.financial_year,
+            "reporting_month": self.reporting_month,
+            "sku_code": self.sku_code,
+            "units_sold": self.units_sold,
+            "category_i_mt": self.category_i_mt,
+            "category_ii_mt": self.category_ii_mt,
+            "category_iii_mt": self.category_iii_mt,
+            "category_iv_mt": self.category_iv_mt,
+            "calculated_plastic_mt": self.calculated_plastic_mt
+        }
