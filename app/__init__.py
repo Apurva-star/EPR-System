@@ -12,7 +12,9 @@ def create_app():
 
 
     # Database configuration
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///epr_portal.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        "sqlite:///epr_portal.db?timeout=30"
+    )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Connect database
@@ -31,6 +33,19 @@ def create_app():
     # Create database tables
     with app.app_context():
         from app import models as app_models
+        from app.models import Category
+
         db.create_all()
+
+        if Category.query.count() == 0:
+            categories = [
+                Category(category_name="Rigid"),
+                Category(category_name="Flexible"),
+                Category(category_name="MLP"),
+                Category(category_name="Bio")
+            ]
+
+            db.session.add_all(categories)
+            db.session.commit()
 
     return app
