@@ -1,6 +1,11 @@
+
+
+from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.sql import func
+
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import SKU, Credit, Category
+from app.models import SKU, Credit, Category, SalesLog
 
 
 tasks_bp = Blueprint("tasks", __name__)
@@ -22,66 +27,169 @@ def get_skus():
     ), 200
 
 
+@tasks_bp.route("/api/products", methods=["GET"])
+def get_products():
+
+    products = SKU.query.order_by(SKU.product_name).all()
+
+    return jsonify(
+        [product.to_dict() for product in products]
+    ), 200
+
+
 # POST - Create SKU
+
 @tasks_bp.route("/api/skus", methods=["POST"])
 def create_sku():
 
     data = request.get_json()
 
-    if not data or "sku_code" not in data or "product_name" not in data:
+    if not data:
         return jsonify({
-            "error": "Missing mandatory fields (sku_code, product_name)"
+            "error": "JSON data is required"
         }), 400
 
-    # Check duplicate SKU
-    existing_sku = db.session.get(
-        SKU,
-        data["sku_code"]
-    )
+    # Required fields
+    required_fields = [
+        "sku_code",
+        "product_name"
+    ]
+
+    missing_fields = [
+        field
+        for field in required_fields
+        if not data.get(field)
+    ]
+
+    if missing_fields:
+        return jsonify({
+            "error": "Missing required fields",
+            "fields": missing_fields
+        }), 400
+
+
+    # Check product name
+    existing_product = SKU.query.filter_by(
+        product_name=data["product_name"]
+    ).first()
+
+    if existing_product:
+        existing_product.cat_i_rigid = float(
+            data.get("cat_i_rigid", existing_product.cat_i_rigid)
+        )
+        existing_product.cat_ii_flexible = float(
+            data.get("cat_ii_flexible", existing_product.cat_ii_flexible)
+        )
+        existing_product.cat_iii_mlp = float(
+            data.get("cat_iii_mlp", existing_product.cat_iii_mlp)
+        )
+        existing_product.cat_iv_bio = float(
+            data.get("cat_iv_bio", existing_product.cat_iv_bio)
+        )
+
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({
+                "error": "Product update conflicts with existing data"
+            }), 400
+        except OperationalError:
+            db.session.rollback()
+            return jsonify({
+                "error": "Database is busy. Close the SQLite database viewer and try again."
+            }), 503
+
+        return jsonify({
+            "message": "Product weights updated successfully",
+            "sku": existing_product.to_dict()
+        }), 200
+
+
+    # Check SKU code for new products
+    existing_sku = SKU.query.filter_by(
+        sku_code=data["sku_code"]
+    ).first()
 
     if existing_sku:
         return jsonify({
-            "error": "SKU Code already exists"
+            "error": "SKU code already exists"
         }), 400
 
+
+    # Create SKU
     new_sku = SKU(
+
         sku_code=data["sku_code"],
+
         product_name=data["product_name"],
 
         cat_i_rigid=float(
-            data.get("cat_i_rigid", 0.0)
+            data.get("cat_i_rigid", 0)
         ),
 
         cat_ii_flexible=float(
-            data.get("cat_ii_flexible", 0.0)
+            data.get("cat_ii_flexible", 0)
         ),
 
         cat_iii_mlp=float(
-            data.get("cat_iii_mlp", 0.0)
+            data.get("cat_iii_mlp", 0)
         ),
 
         cat_iv_bio=float(
-            data.get("cat_iv_bio", 0.0)
+            data.get("cat_iv_bio", 0)
         )
     )
 
+
     db.session.add(new_sku)
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            "error": "SKU code or product name already exists"
+        }), 400
+    except OperationalError:
+        db.session.rollback()
+        return jsonify({
+            "error": "Database is busy. Close the SQLite database viewer and try again."
+        }), 503
+
 
     return jsonify({
-        "message": "SKU profile created successfully",
+
+        "message": "SKU created successfully",
+
         "sku": new_sku.to_dict()
+
     }), 201
 
+# PUT - Update SKU using sku_code from JSON
+@tasks_bp.route("/api/skus", methods=["PUT"])
+def update_sku_from_json():
 
-# PUT - Update SKU
+    data = request.get_json()
+
+    if not data or not data.get("sku_code"):
+        return jsonify({
+            "error": "sku_code is required for update"
+        }), 400
+
+    return update_sku(data["sku_code"])
+
+
+# PUT - Update SKU using sku_code in the URL
 @tasks_bp.route("/api/skus/<string:sku_code>", methods=["PUT"])
 def update_sku(sku_code):
 
-    sku = db.session.get(
-        SKU,
-        sku_code
-    )
+    sku = SKU.query.filter_by(
+    sku_code=sku_code
+  ).first()
+
+    if not sku and sku_code.isdigit():
+        sku = db.session.get(SKU, int(sku_code))
 
     if not sku:
         return jsonify({
@@ -143,11 +251,9 @@ def update_sku(sku_code):
 )
 def delete_sku(sku_code):
 
-    sku = db.session.get(
-        SKU,
-        sku_code
-    )
-
+    sku = SKU.query.filter_by(
+    sku_code=sku_code
+  ).first()
     if not sku:
         return jsonify({
             "error": "SKU not found"
@@ -315,3 +421,128 @@ def add_credit():
         }
 
     }), 201
+
+
+# DELETE - Delete Credit
+@tasks_bp.route("/api/credits/<int:credit_id>", methods=["DELETE"])
+def delete_credit(credit_id):
+
+    credit = Credit.query.get(credit_id)
+
+    if not credit:
+        return jsonify({
+            "error": "Credit not found"
+        }), 404
+
+    db.session.delete(credit)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Credit deleted successfully",
+        "credit_id": credit_id
+    }), 200
+
+
+# =========================================================
+# DASHBOARD SUMMARY API
+# =========================================================
+
+@tasks_bp.route("/api/dashboard", methods=["GET"])
+@tasks_bp.route("/api/dashboard/summary", methods=["GET"])
+def get_dashboard_summary():
+
+    # -----------------------------------------------------
+    # 1. Total plastic calculated from SalesLog
+    # -----------------------------------------------------
+
+    total_plastic_sold = (
+        db.session.query(
+            func.sum(SalesLog.calculated_plastic_mt)
+        ).scalar()
+        or 0.0
+    )
+
+
+    # -----------------------------------------------------
+    # 2. EPR Target
+    # Example: 70% of total plastic
+    # -----------------------------------------------------
+
+    target_percentage = 0.70
+
+    mandated_target = (
+        total_plastic_sold * target_percentage
+    )
+
+
+    # -----------------------------------------------------
+    # 3. Total EPR Credits Purchased
+    # This comes from Credit table
+    # -----------------------------------------------------
+
+    purchased_credits = (
+        db.session.query(
+            func.sum(Credit.tonnage_mt)
+        ).scalar()
+        or 0.0
+    )
+
+
+    # -----------------------------------------------------
+    # 4. Remaining / Deficit
+    # -----------------------------------------------------
+
+    deficit = max(
+        0.0,
+        mandated_target - purchased_credits
+    )
+
+
+    # -----------------------------------------------------
+    # 5. Fine Risk
+    # -----------------------------------------------------
+
+    fine_rate_per_mt = 3000.0
+
+    fine_risk = (
+        deficit * fine_rate_per_mt
+    )
+
+
+    # -----------------------------------------------------
+    # 6. Compliance Score
+    # -----------------------------------------------------
+
+    compliance_score = min(
+        100.0,
+        (purchased_credits / mandated_target * 100)
+        if mandated_target > 0
+        else 100.0
+    )
+
+
+    # -----------------------------------------------------
+    # Return dashboard data
+    # -----------------------------------------------------
+
+    return jsonify({
+
+        "total_plastic_mt":
+            round(total_plastic_sold, 2),
+
+        "mandated_target_mt":
+            round(mandated_target, 2),
+
+        "purchased_credits_mt":
+            round(purchased_credits, 2),
+
+        "compliance_score_percent":
+            round(compliance_score, 1),
+
+        "deficit_mt":
+            round(deficit, 2),
+
+        "fine_risk_inr":
+            round(fine_risk, 2)
+
+    }), 200

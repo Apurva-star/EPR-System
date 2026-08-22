@@ -18,17 +18,49 @@ class User(db.Model):
 
 
 class SKU(db.Model):
+  
     __tablename__ = "skus"
 
-    sku_code = db.Column(db.String(50), primary_key=True)
-    product_name = db.Column(db.String(150), nullable=False)
-    cat_i_rigid = db.Column(db.Float, default=0.0)
-    cat_ii_flexible = db.Column(db.Float, default=0.0)
-    cat_iii_mlp = db.Column(db.Float, default=0.0)
-    cat_iv_bio = db.Column(db.Float, default=0.0)
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    sku_code = db.Column(
+        db.String(50),
+        unique=True,
+        nullable=False
+    )
+
+    product_name = db.Column(
+        db.String(150),
+        unique=True,
+        nullable=False
+    )
+
+    cat_i_rigid = db.Column(
+        db.Float,
+        default=0.0
+    )
+
+    cat_ii_flexible = db.Column(
+        db.Float,
+        default=0.0
+    )
+
+    cat_iii_mlp = db.Column(
+        db.Float,
+        default=0.0
+    )
+
+    cat_iv_bio = db.Column(
+        db.Float,
+        default=0.0
+    )
 
     def to_dict(self):
         return {
+            "id": self.id,
             "sku_code": self.sku_code,
             "product_name": self.product_name,
             "cat_i_rigid": self.cat_i_rigid,
@@ -36,6 +68,9 @@ class SKU(db.Model):
             "cat_iii_mlp": self.cat_iii_mlp,
             "cat_iv_bio": self.cat_iv_bio,
         }
+
+
+ProductMaster = SKU
 
 class Category(db.Model):
     __tablename__ = "categories"
@@ -100,7 +135,10 @@ class Credit(db.Model):
 class SalesLog(db.Model):
     __tablename__ = "sales_logs"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
 
     financial_year = db.Column(
         db.String(20),
@@ -112,10 +150,16 @@ class SalesLog(db.Model):
         nullable=False
     )
 
-    sku_code = db.Column(
-        db.String(50),
-        db.ForeignKey("skus.sku_code"),
+    # Store internal SKU ID
+    sku_id = db.Column(
+        db.Integer,
+        db.ForeignKey("skus.id"),
         nullable=False
+    )
+
+    sku = db.relationship(
+        "SKU",
+        backref="sales_logs"
     )
 
     units_sold = db.Column(
@@ -158,11 +202,22 @@ class SalesLog(db.Model):
             "id": self.id,
             "financial_year": self.financial_year,
             "reporting_month": self.reporting_month,
-            "sku_code": self.sku_code,
+
+            "sku_id": self.sku_id,
+
+            # This shows SKU code in API response
+            "sku_code": self.sku.sku_code
+                if self.sku else None,
+
+            "product_name": self.sku.product_name
+                if self.sku else None,
+
             "units_sold": self.units_sold,
+
             "category_i_mt": self.category_i_mt,
             "category_ii_mt": self.category_ii_mt,
             "category_iii_mt": self.category_iii_mt,
             "category_iv_mt": self.category_iv_mt,
-            "calculated_plastic_mt": self.calculated_plastic_mt
+            "calculated_plastic_mt":
+                self.calculated_plastic_mt
         }

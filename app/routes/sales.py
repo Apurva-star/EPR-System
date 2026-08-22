@@ -2,11 +2,12 @@ import csv
 import io
 
 from flask import Blueprint, jsonify, request
+from sqlalchemy.exc import OperationalError
 
 from app import db
 from app.models import SKU, SalesLog
 
-
+#addd
 # Create Sales Blueprint
 sales_bp = Blueprint("sales", __name__)
 
@@ -78,26 +79,23 @@ def upload_sales():
 
         for row in csv_reader:
 
-            sku_code = row["sku_code"].strip()
+            sku_code = row.get("sku_code", "").strip()
 
-            units_sold = int(row["units_sold"])
-
+            units_sold = int(row.get("units_sold", 0))
 
             # -----------------------------------
-            # 6. Find SKU in database
+            # 6. Find SKU using SKU code
             # -----------------------------------
 
-            sku_item = SKU.query.get(sku_code)
+            sku_item = SKU.query.filter_by(
+                sku_code=sku_code
+            ).first()
 
             if not sku_item:
-                # SKU doesn't exist in master
-                # Skip this row
                 continue
 
-
             # -----------------------------------
-            # 7. Category-wise plastic
-            #    weight in grams
+            # 7. Category-wise plastic weight in grams
             # -----------------------------------
 
             category_i_grams = (
@@ -170,7 +168,7 @@ def upload_sales():
 
                 reporting_month=reporting_month,
 
-                sku_code=sku_code,
+                sku_id=sku_item.id,
 
                 units_sold=units_sold,
 
@@ -195,9 +193,14 @@ def upload_sales():
         # 12. Save all records
         # -----------------------------------
 
-        db.session.bulk_save_objects(logs_to_save)
-
-        db.session.commit()
+        try:
+            db.session.bulk_save_objects(logs_to_save)
+            db.session.commit()
+        except OperationalError:
+            db.session.rollback()
+            return jsonify({
+                "error": "Database is busy. Close the SQLite database viewer and try again."
+            }), 503
 
 
         # -----------------------------------

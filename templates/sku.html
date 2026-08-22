@@ -134,7 +134,7 @@
                             class="form-control"
                             id="sku_code"
                             placeholder="Example: SKU-001"
-                            required>
+                            >
 
                         <small class="text-muted">
                             SKU Code cannot be changed while editing.
@@ -507,7 +507,7 @@ async function saveSKU() {
     const productName =
         document.getElementById("product_name").value.trim();
 
-    if (!skuCode || !productName) {
+    if (!productName) {
 
         showMessage(
             "SKU Code and Product Name are required.",
@@ -519,8 +519,6 @@ async function saveSKU() {
 
 
     const data = {
-
-        sku_code: skuCode,
 
         product_name: productName,
 
@@ -545,6 +543,10 @@ async function saveSKU() {
             ) || 0
 
     };
+
+    if (skuCode) {
+        data.sku_code = skuCode;
+    }
 
 
     try {

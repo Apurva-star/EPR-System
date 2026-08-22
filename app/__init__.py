@@ -15,6 +15,11 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = (
         "sqlite:///epr_portal.db?timeout=30"
     )
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "connect_args": {
+            "timeout": 30
+        }
+    }
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Connect database
@@ -24,11 +29,13 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.tasks import tasks_bp
     from app.routes.sales import sales_bp
+    from app.routes.reports import reports_bp
 
     # Register routes
     app.register_blueprint(auth_bp)
     app.register_blueprint(tasks_bp)
     app.register_blueprint(sales_bp)
+    app.register_blueprint(reports_bp)
 
     # Create database tables
     with app.app_context():
